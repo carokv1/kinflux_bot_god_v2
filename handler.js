@@ -674,40 +674,44 @@ export async function participantsUpdate({ id, participants, action }) {
     let text = ''
     switch (action) {
         case 'add':
-case 'remove':
-    if (chat.welcome) {
-        let groupMetadata = await this.groupMetadata(id) || (conn.chats[id] || {}).metadata;
-        for (let user of participants) {
-            let pp, ppgp;
-            try {
-                pp = await this.profilePictureUrl(user, 'image');
-                ppgp = await this.profilePictureUrl(id, 'image');
-            } catch (error) {
-                console.error(`Error retrieving profile picture: ${error}`);
-                pp = 'https://telegra.ph/file/0b814069d86ee9a022da5.jpg'; // Assign default image URL
-                ppgp = 'https://telegra.ph/file/0b814069d86ee9a022da5.jpg'; // Assign default image URL
-            } finally {
-                let text = (action === 'add' ? (chat.sWelcome || this.welcome || conn.welcome || 'Welcome, @user').replace('@group', await this.getName(id)).replace('@desc', groupMetadata.desc?.toString() || 'Desconocido') :
-                    (chat.sBye || this.bye || conn.bye || 'HELLO, @user')).replace('@user', '@' + user.split('@')[0]);
+        case 'remove':
+            if (chat.welcome) {
+                let groupMetadata = await this.groupMetadata(id) || (conn.chats[id] || {}).metadata
+                for (let user of participants) {
+                    let pp = 'https://raw.githubusercontent.com/carokv1/kinflux_bot_god_v2/main/kkinfluxbot.jpg'
+                    let ppgp = 'https://raw.githubusercontent.com/diggilly/kinflux_bot_God/main/Guru.jpg'
+                    try {
+                        pp = await this.profilePictureUrl(user, 'image')
+                        ppgp = await this.profilePictureUrl(id, 'image')
+                        } finally {
+                        text = (action === 'add' ? (chat.sWelcome || this.welcome || conn.welcome || 'Welcome, @user').replace('@group', await this.getName(id)).replace('@desc', groupMetadata.desc?.toString() || 'Desconocido') :
+                            (chat.sBye || this.bye || conn.bye || 'HELLO This Is kinflux bot, @user')).replace('@user', '@' + user.split('@')[0])
+                         
+                            let wel = API('fgmods', '/api/welcome', {
+                                username: await this.getName(user),
+                                groupname: await this.getName(id),
+                                groupicon: ppgp,
+                                membercount: groupMetadata.participants.length,
+                                profile: pp,
+                                background: 'https://raw.githubusercontent.com/diggilly/kinflux_bot_God/main/Guru.jpg'
+                            }, 'apikey')
 
-                let nthMember = groupMetadata.participants.length;
-                let secondText = action === 'add' ? `Welcome, ${await this.getName(user)}, our ${nthMember}th member` : `Goodbye, our ${nthMember}th group member`;
-
-                try {
-                    let apiKey = "gandu";  // Replace with your actual API Key
-                    let wel = await fetch(`https://oni-chan.my.id/api/canvas/welcome_v1?ppurl=${encodeURIComponent(pp)}&bgurl=https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoyd4vOi-tJEhN-voL-yVTYsko8dcBvloa2A&usqp=CAU&username=${encodeURIComponent(await this.getName(user))}&totalmember=${encodeURIComponent(nthMember.toString())}&secondtext=${encodeURIComponent(secondText)}&apikey=${apiKey}`);
-                    let lea = await fetch(`https://oni-chan.my.id/api/canvas/leave_v1?ppurl=${encodeURIComponent(pp)}&bgurl=https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoyd4vOi-tJEhN-voL-yVTYsko8dcBvloa2A&usqp=CAU&username=${encodeURIComponent(await this.getName(user))}&totalmember=${encodeURIComponent(nthMember.toString())}&secondtext=${encodeURIComponent(secondText)}&apikey=${apiKey}`);
-
-                    let welBuffer = await wel.buffer();
-                    let leaBuffer = await lea.buffer();
-
-                    this.sendFile(id, action === 'add' ? welBuffer : leaBuffer, 'welcome.png', text, null, false, { mentions: [user] });
-                } catch (error) {
-                    console.error(`Error generating welcome/leave image: ${error}`);
+                            let lea = API('fgmods', '/api/goodbye', {
+                                username: await this.getName(user),
+                                groupname: await this.getName(id),
+                                groupicon: ppgp,
+                                membercount: groupMetadata.participants.length,
+                                profile: pp,
+                                background: 'https://raw.githubusercontent.com/carokv1/kinflux_bot_god_v2/main/kkinfluxbot.jpg'
+                            }, 'apikey')
+                             this.sendFile(id, action === 'add' ? wel : lea, 'pp.jpg', text, null, false, { mentions: [user] })
+                            /*this.sendButton(id, text, igfg, action === 'add' ? wel : lea, [
+                             [(action == 'add' ? '⦙☰ MENU' : 'BYE'), (action == 'add' ? '/help' : '')], 
+                             [(action == 'add' ? '⏍ INFO' : 'ッ'), (action == 'add' ? '/info' : ' ')] ], null, {mentions: [user]})
+                          */
+                    }
                 }
             }
-        }
-    }
 
             break
         case 'promote':
