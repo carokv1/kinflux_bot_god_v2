@@ -672,46 +672,96 @@ export async function participantsUpdate({ id, participants, action }) {
         await loadDatabase()
     let chat = global.db.data.chats[id] || {}
     let text = ''
-    switch (action) {
-        case 'add':
-        case 'remove':
-            if (chat.welcome) {
-                let groupMetadata = await this.groupMetadata(id) || (conn.chats[id] || {}).metadata
-                for (let user of participants) {
-                    let pp = 'https://raw.githubusercontent.com/carokv1/kinflux_bot_god_v2/main/kkinfluxbot.jpg'
-                    let ppgp = 'https://raw.githubusercontent.com/diggilly/kinflux_bot_God/main/Guru.jpg'
-                    try {
-                        pp = await this.profilePictureUrl(user, 'image')
-                        ppgp = await this.profilePictureUrl(id, 'image')
-                        } finally {
-                        text = (action === 'add' ? (chat.sWelcome || this.welcome || conn.welcome || 'Welcome, @user').replace('@group', await this.getName(id)).replace('@desc', groupMetadata.desc?.toString() || 'Desconocido') :
-                            (chat.sBye || this.bye || conn.bye || 'HELLO This Is kinflux bot, @user')).replace('@user', '@' + user.split('@')[0])
-                         
-                            let wel = API('fgmods', '/api/welcome', {
-                                username: await this.getName(user),
-                                groupname: await this.getName(id),
-                                groupicon: ppgp,
-                                membercount: groupMetadata.participants.length,
-                                profile: pp,
-                                background: 'https://raw.githubusercontent.com/diggilly/kinflux_bot_God/main/Guru.jpg'
-                            }, 'apikey')
+  switch (action) {
+  case 'add':
+    if (chat.welcome) {
+      let groupMetadata = await this.groupMetadata(id) || (conn.chats[id] || {}).metadata;
+      for (let user of participants) {
+        let pp, ppgp;
+        try {
+          pp = await this.profilePictureUrl(user, 'image');
+          ppgp = await this.profilePictureUrl(id, 'image');
+        } catch (error) {
+          console.error(`Error retrieving profile picture: ${error}`);
+          pp = 'https://raw.githubusercontent.com/carokv1/kinflux_bot_god_v2/main/kkinfluxbot.jpg'; // Assign default image URL
+          ppgp = 'https://raw.githubusercontent.com/carokv1/kinflux_bot_god_v2/main/kkinfluxbot.jpg'; // Assign default image URL
+        } finally {
+          let text = (chat.sWelcome || this.welcome || conn.welcome || 'Welcome, @user')
+            .replace('@group', await this.getName(id))
+            .replace('@desc', groupMetadata.desc?.toString() || 'Desconocido')
+            .replace('@user', '@' + user.split('@')[0]);
 
-                            let lea = API('fgmods', '/api/goodbye', {
-                                username: await this.getName(user),
-                                groupname: await this.getName(id),
-                                groupicon: ppgp,
-                                membercount: groupMetadata.participants.length,
-                                profile: pp,
-                                background: 'https://raw.githubusercontent.com/carokv1/kinflux_bot_god_v2/main/kkinfluxbot.jpg'
-                            }, 'apikey')
-                             this.sendFile(id, action === 'add' ? wel : lea, 'pp.jpg', text, null, false, { mentions: [user] })
-                            /*this.sendButton(id, text, igfg, action === 'add' ? wel : lea, [
-                             [(action == 'add' ? '⦙☰ MENU' : 'BYE'), (action == 'add' ? '/help' : '')], 
-                             [(action == 'add' ? '⏍ INFO' : 'ッ'), (action == 'add' ? '/info' : ' ')] ], null, {mentions: [user]})
-                          */
-                    }
-                }
-            }
+          let nthMember = groupMetadata.participants.length;
+          let secondText = `Welcome, ${await this.getName(user)}, our ${nthMember}th member`;
+
+          // Remove the hardcoded background image URL and use the new URL for the API
+          let welcomeApiUrl = `https://wecomeapi.onrender.com/welcome-image?username=${encodeURIComponent(
+            await this.getName(user)
+          )}&guildName=${encodeURIComponent(await this.getName(id))}&guildIcon=${encodeURIComponent(
+            ppgp
+          )}&memberCount=${encodeURIComponent(
+            nthMember.toString()
+          )}&avatar=${encodeURIComponent(pp)}&background=${encodeURIComponent(
+            'https://raw.githubusercontent.com/carokv1/kinflux_bot_god_v2/main/kkinfluxbot.jpg'
+          )}`;
+
+          try {
+            let welcomeResponse = await fetch(welcomeApiUrl);
+            let welcomeBuffer = await welcomeResponse.buffer();
+
+            this.sendFile(id, welcomeBuffer, 'welcome.png', text, null, false, { mentions: [user] });
+          } catch (error) {
+            console.error(`Error generating welcome image: ${error}`);
+          }
+        }
+      }
+    }
+    break;
+
+  case 'remove':
+    if (chat.welcome) {
+      let groupMetadata = await this.groupMetadata(id) || (conn.chats[id] || {}).metadata;
+      for (let user of participants) {
+        let pp, ppgp;
+        try {
+          pp = await this.profilePictureUrl(user, 'image');
+          ppgp = await this.profilePictureUrl(id, 'image');
+        } catch (error) {
+          console.error(`Error retrieving profile picture: ${error}`);
+          pp = 'https://raw.githubusercontent.com/carokv1/kinflux_bot_god_v2/main/kkinfluxbot.jpg'; // Assign default image URL
+          ppgp = 'https://raw.githubusercontent.com/carokv1/kinflux_bot_god_v2/main/kkinfluxbot.jpg'; // Assign default image URL
+        } finally {
+          let text = (chat.sBye || this.bye || conn.bye || 'HELLO, @user')
+            .replace('@user', '@' + user.split('@')[0]);
+
+          let nthMember = groupMetadata.participants.length;
+          let secondText = `Goodbye, our ${nthMember}th group member`;
+
+          // Remove the hardcoded background image URL and use the new URL for the API
+          let leaveApiUrl = `https://wecomeapi.onrender.com/leave-image?username=${encodeURIComponent(
+            await this.getName(user)
+          )}&guildName=${encodeURIComponent(await this.getName(id))}&guildIcon=${encodeURIComponent(
+            ppgp
+          )}&memberCount=${encodeURIComponent(
+            nthMember.toString()
+          )}&avatar=${encodeURIComponent(pp)}&background=${encodeURIComponent(
+            'https://raw.githubusercontent.com/carokv1/kinflux_bot_god_v2/main/kkinfluxbot.jpg'
+          )}`;
+
+          try {
+            let leaveResponse = await fetch(leaveApiUrl);
+            let leaveBuffer = await leaveResponse.buffer();
+
+            this.sendFile(id, leaveBuffer, 'leave.png', text, null, false, { mentions: [user] });
+          } catch (error) {
+            console.error(`Error generating leave image: ${error}`);
+          }
+        }
+      }
+    }
+    break;
+}
+
 
             break
         case 'promote':
